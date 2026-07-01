@@ -31,8 +31,8 @@ export default function WalletPage() {
     try {
       setIsLoading(true);
       const [walletsRes, historyRes] = await Promise.all([
-        api.get('/v1/wallets'),
-        api.get('/v1/transactions')
+        api.get('/wallets'),
+        api.get('/transactions')
       ]);
       
       setWallets(walletsRes.data.data);

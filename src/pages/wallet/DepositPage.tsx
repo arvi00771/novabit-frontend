@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
-import { Copy, QrCode, CheckCircle2, Clock, XCircle, ChevronLeft } from 'lucide-react';
+import { Copy, CheckCircle2, Clock, XCircle, ChevronLeft } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { Link } from 'react-router-dom';
 import api from '../../utils/api';
 
@@ -35,7 +35,7 @@ export default function DepositPage() {
     setIsLoading(true);
     try {
       // Assuming backend has an endpoint to get/generate address
-      const res = await api.get(`/v1/wallets/deposit/address/${asset}`);
+      const res = await api.get(`/wallets/deposit/address/${asset}`);
       setAddress(res.data.data.address);
       // Min deposit might come from a config or coin info endpoint
       // For now using mock or if provided in response
@@ -52,7 +52,7 @@ export default function DepositPage() {
 
   const fetchDepositHistory = async (asset: string) => {
     try {
-      const res = await api.get('/v1/transactions', {
+      const res = await api.get('/transactions', {
         params: { type: 'DEPOSIT', asset }
       });
       setHistory(res.data.data);
@@ -120,7 +120,12 @@ export default function DepositPage() {
               <div className="bg-gray-50 p-6 rounded-2xl border border-dashed border-gray-200 flex flex-col items-center">
                 <div className="bg-white p-4 rounded-xl shadow-sm mb-4">
                   {address && address !== 'Error generating address' ? (
-                    <QrCode size={180} className="text-gray-900" />
+                    <QRCodeSVG
+                      value={selectedCoin.symbol === 'BTC' ? `bitcoin:${address}?label=NovaBit` : address}
+                      size={180}
+                      level="H"
+                      includeMargin={true}
+                    />
                   ) : (
                     <div className="w-[180px] h-[180px] bg-gray-100 animate-pulse rounded-lg" />
                   )}

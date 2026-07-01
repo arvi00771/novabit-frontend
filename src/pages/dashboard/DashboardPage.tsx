@@ -4,7 +4,7 @@ import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../store/AuthContext';
 import api from '../../utils/api';
 import { 
-  TrendingUp, 
+   
   Wallet, 
   ArrowUpRight, 
   ArrowDownLeft, 
@@ -46,15 +46,15 @@ export default function DashboardPage() {
   const [wallets, setWallets] = useState<WalletAsset[]>([]);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [prices, setPrices] = useState<Record<string, number>>({ USDT: 1 });
-  const [isLoading, setIsLoading] = useState(true);
+  
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [walletsRes, ordersRes, pairsRes] = await Promise.all([
-          api.get('/v1/wallets'),
-          api.get('/v1/orders', { params: { limit: 5 } }),
-          api.get('/v1/market/pairs')
+          api.get('/wallets'),
+          api.get('/orders', { params: { limit: 5 } }),
+          api.get('/market/pairs')
         ]);
 
         setWallets(walletsRes.data.data);
@@ -71,8 +71,6 @@ export default function DashboardPage() {
         setPrices(newPrices);
       } catch (error) {
         console.error('Dashboard data fetch failed:', error);
-      } finally {
-        setIsLoading(false);
       }
     };
 

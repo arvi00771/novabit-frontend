@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { ArrowUpRight, CheckCircle2, Clock, XCircle, ChevronLeft, AlertTriangle } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { ArrowUpRight, CheckCircle2, ChevronLeft, AlertTriangle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import api from '../../utils/api';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -32,7 +32,6 @@ const COINS = [
 ];
 
 export default function WithdrawPage() {
-  const navigate = useNavigate();
   const [selectedCoin, setSelectedCoin] = useState(COINS[0]);
   const [balances, setBalances] = useState<Record<string, string>>({});
   const [history, setHistory] = useState<any[]>([]);
@@ -58,7 +57,7 @@ export default function WithdrawPage() {
 
   const fetchBalances = async () => {
     try {
-      const res = await api.get('/v1/wallets');
+      const res = await api.get('/wallets');
       const bals: Record<string, string> = {};
       res.data.data.forEach((w: any) => {
         bals[w.asset] = w.available_balance;
@@ -71,7 +70,7 @@ export default function WithdrawPage() {
 
   const fetchWithdrawalHistory = async () => {
     try {
-      const res = await api.get('/v1/wallets/withdrawals');
+      const res = await api.get('/wallets/withdrawals');
       setHistory(res.data.data);
     } catch (error) {
       console.error('Failed to fetch withdrawal history:', error);
@@ -83,7 +82,7 @@ export default function WithdrawPage() {
     setError(null);
     setSuccess(null);
     try {
-      await api.post('/v1/wallets/withdraw', {
+      await api.post('/wallets/withdraw', {
         ...data,
         asset: selectedCoin.symbol,
       });

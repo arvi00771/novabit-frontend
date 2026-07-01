@@ -38,10 +38,10 @@ export default function TradingPage() {
     try {
       setIsLoading(true);
       const [pairsRes, bookRes, tradesRes, tickerRes] = await Promise.all([
-        api.get('/v1/market/pairs'),
-        api.get(`/v1/market/orderbook/${selectedPair}`),
-        api.get(`/v1/market/trades/${selectedPair}`),
-        api.get(`/v1/market/ticker/${selectedPair}`)
+        api.get('/market/pairs'),
+        api.get(`/market/orderbook/${selectedPair}`),
+        api.get(`/market/trades/${selectedPair}`),
+        api.get(`/market/ticker/${selectedPair}`)
       ]);
       
       setPairs(pairsRes.data.data);
@@ -93,7 +93,7 @@ export default function TradingPage() {
 
   const handleTradeSubmit = async (data: any) => {
     try {
-      const res = await api.post('/v1/orders', {
+      const res = await api.post('/orders', {
         ...data,
         pair
       });
