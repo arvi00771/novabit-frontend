@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: novabit-frontend
+    env: node
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /
