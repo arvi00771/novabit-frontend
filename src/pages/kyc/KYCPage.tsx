@@ -6,7 +6,7 @@ import {
   ShieldCheck, 
   Upload, 
   User, 
-  MapPin, 
+   
   CheckCircle2, 
   ArrowRight, 
   AlertCircle 

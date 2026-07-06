@@ -8,8 +8,8 @@ import {
   Settings, 
   TrendingUp, 
   Search,
-  CheckCircle2,
-  XCircle
+  
+  
 } from 'lucide-react';
 import { Input } from '../../components/ui/Input';
 

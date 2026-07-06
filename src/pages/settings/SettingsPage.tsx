@@ -7,14 +7,14 @@ import {
   Lock, 
   Key, 
   Bell, 
-  User, 
+   
   Smartphone, 
   Copy, 
   Eye, 
   EyeOff,
-  ChevronRight,
+  
   ShieldCheck,
-  CheckCircle2
+  
 } from 'lucide-react';
 
 export default function SettingsPage() {
