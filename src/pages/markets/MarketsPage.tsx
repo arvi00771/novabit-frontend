@@ -43,7 +43,7 @@ const MarketsPage: React.FC = () => {
       try {
         // First try the backend API
         const response = await api.get('/market/pairs');
-        if (mounted && response.data?.data) {
+        if (mounted && response.data?.data?.length > 0) {
           const data = response.data.data as MarketPair[];
           setMarkets(data);
           setLastUpdate(new Date().toLocaleTimeString());
