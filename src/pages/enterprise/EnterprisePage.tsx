@@ -350,7 +350,17 @@ const EnterprisePage: React.FC = () => {
                       </li>
                     ))}
                   </ul>
-                  <a href="#contact">
+                  <a
+                    href={
+                      tier.name === 'Starter'
+                        ? 'https://buy.stripe.com/4gM9ATg5sbvObKQ6J0awo00'
+                        : tier.name === 'Growth'
+                        ? 'https://buy.stripe.com/eVq3cv06udDW8yE5EWawo01'
+                        : '#contact'
+                    }
+                    target={tier.name !== 'Enterprise' ? '_blank' : undefined}
+                    rel={tier.name !== 'Enterprise' ? 'noopener noreferrer' : undefined}
+                  >
                     <Button
                       className={`w-full rounded-full py-6 font-bold text-base ${
                         tier.highlighted
@@ -358,7 +368,7 @@ const EnterprisePage: React.FC = () => {
                           : 'bg-gray-900 hover:bg-gray-800'
                       }`}
                     >
-                      {tier.name === 'Enterprise' ? 'Contact Sales' : 'Get Started'}
+                      {tier.name === 'Enterprise' ? 'Contact Sales' : 'Buy Now'}
                       <ArrowRight className="ml-2" size={18} />
                     </Button>
                   </a>
