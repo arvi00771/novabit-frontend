@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import {
   Zap, Shield, ChevronRight, CheckCircle2, Server, Wallet,
   Smartphone, LayoutDashboard, Activity, ChevronDown,
-  Star, Globe, Lock, Users, ArrowRight, BarChart3, Infinity
+  Star, Globe, Lock, Users, ArrowRight, BarChart3, Infinity, BookOpen
 } from 'lucide-react';
 
 const features = [
@@ -471,6 +471,36 @@ const EnterprisePage: React.FC = () => {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Download Guide Section */}
+        <section className="py-20">
+          <div className="container mx-auto px-6">
+            <div className="bg-gray-50 rounded-[2rem] p-12 lg:p-16 border border-gray-100 max-w-4xl mx-auto text-center">
+              <div className="max-w-2xl mx-auto space-y-6">
+                <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto">
+                  <BookOpen className="text-blue-600" size={32} />
+                </div>
+                <h2 className="text-3xl lg:text-4xl font-black tracking-tight text-gray-900">
+                  Ready to deploy? Get the guide.
+                </h2>
+                <p className="text-lg text-gray-500 font-medium">
+                  Our comprehensive deployment guide walks you through every step — 
+                  from infrastructure setup to going live. Includes environment 
+                  configurations, branding instructions, and a launch checklist.
+                </p>
+                <Link to="/onboarding">
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-lg px-10 py-6 rounded-full font-bold shadow-lg shadow-blue-100 group">
+                    Download Deployment Guide
+                    <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+                <p className="text-sm text-gray-400 font-bold uppercase tracking-widest">
+                  Includes setup scripts, env templates & checklist
+                </p>
+              </div>
             </div>
           </div>
         </section>

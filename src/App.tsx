@@ -3,6 +3,7 @@ import MainLayout from './layouts/MainLayout';
 import LandingPage from './pages/LandingPage';
 import MarketsPage from './pages/markets/MarketsPage';
 import EnterprisePage from './pages/enterprise/EnterprisePage';
+import OnboardingPage from './pages/enterprise/OnboardingPage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
@@ -24,6 +25,7 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/markets" element={<MarketsPage />} />
           <Route path="/enterprise" element={<EnterprisePage />} />
+          <Route path="/onboarding" element={<OnboardingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           
