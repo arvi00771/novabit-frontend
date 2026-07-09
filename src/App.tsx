@@ -14,6 +14,7 @@ import WithdrawPage from './pages/wallet/WithdrawPage';
 import KYCPage from './pages/kyc/KYCPage';
 import SettingsPage from './pages/settings/SettingsPage';
 import AdminPage from './pages/admin/AdminPage';
+import StakingPage from './pages/staking/StakingPage';
 import { AuthProvider } from './store/AuthContext';
 import ProtectedRoute from './routes/ProtectedRoute';
 
@@ -39,6 +40,7 @@ function App() {
               <Route path="/kyc" element={<KYCPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/admin" element={<AdminPage />} />
+              <Route path="/staking" element={<StakingPage />} />
             </Route>
           </Route>
 
