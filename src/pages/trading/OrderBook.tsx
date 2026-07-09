@@ -7,8 +7,8 @@ interface OrderBookProps {
 }
 
 export const OrderBook: React.FC<OrderBookProps> = ({ bids, asks, pair }) => {
-  const quoteAsset = pair.split('/')[1] || 'USDT';
-  const baseAsset = pair.split('/')[0] || 'BTC';
+  const quoteAsset = 'USDT';
+  const baseAsset = pair.replace('USDT', '') || 'BTC';
 
   // Calculate total depth for visualization
   const maxBidTotal = Math.max(...bids.map(b => parseFloat(b.quantity) || 0), 1);

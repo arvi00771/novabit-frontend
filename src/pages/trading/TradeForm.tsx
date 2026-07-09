@@ -8,15 +8,17 @@ interface TradeFormProps {
   balance: { base: string; quote: string };
   currentPrice: string;
   onSubmit: (data: any) => void;
+  walletLoading?: boolean;
 }
 
-export const TradeForm: React.FC<TradeFormProps> = ({ pair, balance, currentPrice, onSubmit }) => {
+export const TradeForm: React.FC<TradeFormProps> = ({ pair, balance, currentPrice, onSubmit, walletLoading }) => {
   const [side, setSide] = useState<'buy' | 'sell'>('buy');
   const [type, setType] = useState<'limit' | 'market'>('limit');
   const [price, setPrice] = useState(currentPrice);
   const [quantity, setQuantity] = useState('');
   
-  const [base, quote] = pair.split('/');
+  const base = pair.replace('USDT', '') || 'BTC';
+  const quote = 'USDT';
 
   const handleTotalClick = (percent: number) => {
     if (side === 'buy') {
@@ -75,7 +77,11 @@ export const TradeForm: React.FC<TradeFormProps> = ({ pair, balance, currentPric
         <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase tracking-tight">
           <span>Available</span>
           <span className="text-gray-900">
-            {side === 'buy' ? `${balance.quote} ${quote}` : `${balance.base} ${base}`}
+            {walletLoading ? (
+              <span className="text-gray-400">Loading...</span>
+            ) : (
+              `${side === 'buy' ? `${parseFloat(balance.quote).toFixed(2)} ${quote}` : `${parseFloat(balance.base).toFixed(4)} ${base}`}`
+            )}
           </span>
         </div>
 
