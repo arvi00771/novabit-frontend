@@ -1,8 +1,21 @@
 import React from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
-import { LayoutDashboard, TrendingUp, Wallet, Settings, LogOut, User, ShieldAlert } from 'lucide-react';
+import { LayoutDashboard, TrendingUp, Wallet, Settings, LogOut, User, ShieldAlert, Award } from 'lucide-react';
 import { useAuth } from '../store/AuthContext';
+
+const kycBadge = (status?: string) => {
+  switch (status) {
+    case 'VERIFIED':
+      return <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-green-600 bg-green-50 px-2 py-0.5 rounded-full"><Award size={10} /> Verified</span>;
+    case 'PENDING':
+      return <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded-full"><ShieldAlert size={10} /> Pending</span>;
+    case 'REJECTED':
+      return <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-red-600 bg-red-50 px-2 py-0.5 rounded-full">Rejected</span>;
+    default:
+      return <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">Unverified</span>;
+  }
+};
 
 const MainLayout: React.FC = () => {
   const { user, logout } = useAuth();
@@ -54,7 +67,10 @@ const MainLayout: React.FC = () => {
             className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
           >
             <User size={20} />
-            Verification
+            <div className="flex items-center gap-2 flex-1">
+              <span>Verification</span>
+              {kycBadge(user?.kyc_status)}
+            </div>
           </Link>
           <Link
             to="/settings"

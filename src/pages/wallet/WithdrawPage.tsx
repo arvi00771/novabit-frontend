@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { ArrowUpRight, CheckCircle2, ChevronLeft, AlertTriangle } from 'lucide-react';
+import { ArrowUpRight, CheckCircle2, ChevronLeft, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../../utils/api';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { useAuth } from '../../store/AuthContext';
 
 const withdrawSchema = z.object({
   asset: z.string().min(1),
@@ -32,6 +33,7 @@ const COINS = [
 ];
 
 export default function WithdrawPage() {
+  const { user } = useAuth();
   const [selectedCoin, setSelectedCoin] = useState(COINS[0]);
   const [balances, setBalances] = useState<Record<string, string>>({});
   const [history, setHistory] = useState<any[]>([]);
@@ -128,6 +130,27 @@ export default function WithdrawPage() {
         </Link>
         <h1 className="text-2xl font-bold text-gray-900">Withdraw Crypto</h1>
       </div>
+
+      {/* KYC Warning Banner */}
+      {user?.kyc_status !== 'VERIFIED' && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-4">
+          <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center shrink-0">
+            <ShieldAlert className="text-amber-600" size={20} />
+          </div>
+          <div className="flex-1">
+            <h4 className="text-sm font-bold text-amber-800 mb-1">Verify your identity to increase limits</h4>
+            <p className="text-xs text-amber-700 leading-relaxed">
+              Unverified accounts have lower withdrawal limits. Complete KYC verification to unlock higher limits, 
+              fiat on-ramps, and priority support.
+            </p>
+            <Link to="/kyc">
+              <Button size="sm" className="mt-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-full text-xs px-5">
+                Complete Verification
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left: Coin Selection */}
