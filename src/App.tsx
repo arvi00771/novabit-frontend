@@ -21,6 +21,8 @@ const KYCPage = lazy(() => import('./pages/kyc/KYCPage'));
 const SettingsPage = lazy(() => import('./pages/settings/SettingsPage'));
 const AdminPage = lazy(() => import('./pages/admin/AdminPage'));
 const StakingPage = lazy(() => import('./pages/staking/StakingPage'));
+const TermsPage = lazy(() => import('./pages/legal/TermsPage'));
+const PrivacyPage = lazy(() => import('./pages/legal/PrivacyPage'));
 
 // ── Shared loading fallback ──────────────────────
 function PageLoader() {
@@ -43,6 +45,8 @@ function App() {
             <Route path="/markets" element={<MarketsPage />} />
             <Route path="/enterprise" element={<EnterprisePage />} />
             <Route path="/onboarding" element={<OnboardingPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
 
