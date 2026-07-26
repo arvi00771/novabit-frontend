@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import {
@@ -217,7 +217,11 @@ export default function DepositPage() {
       setDepositInfo(res.data.data);
     } catch (err: any) {
       console.error('Failed to fetch deposit address:', err);
-      setAddressError(err.response?.data?.message || 'Unable to generate deposit address. Please try again.');
+      if (err.response?.status === 401) {
+        setAddressError('Your session has expired. Please log in again.');
+      } else {
+        setAddressError(err.response?.data?.message || 'Unable to generate deposit address. Please try again.');
+      }
     } finally {
       setAddressLoading(false);
     }
@@ -238,8 +242,11 @@ export default function DepositPage() {
         params: { type: 'DEPOSIT', asset, limit: 20 },
       });
       setHistory(res.data.data || []);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to fetch deposit history:', err);
+      if (err.response?.status === 401) {
+        // Silently ignore — user will see redirect from axios interceptor
+      }
     } finally {
       setHistoryLoading(false);
     }
@@ -345,7 +352,6 @@ export default function DepositPage() {
 
       {activeTab === 'crypto' ? (
         <CryptoDeposit
-          coins={coins}
           coinsLoading={coinsLoading}
           coinsError={coinsError}
           coinGroups={coinGroups}
@@ -363,6 +369,8 @@ export default function DepositPage() {
           isCopied={isCopied}
           getStatusBadge={getStatusBadge}
           networkMeta={networkMeta}
+          walletBalance={walletBalance}
+          balanceLoading={balanceLoading}
         />
       ) : (
         <FiatDeposit />
@@ -373,14 +381,13 @@ export default function DepositPage() {
 
 // ── Crypto Deposit Sub-component ─────────────────
 function CryptoDeposit({
-  coins, coinsLoading, coinsError, coinGroups,
+  coinsLoading, coinsError, coinGroups,
   selectedAsset, setSelectedAsset,
   selectedNetwork, setSelectedNetwork,
   depositInfo, addressLoading, addressError, onRetryAddress,
   history, historyLoading, copyToClipboard, isCopied,
-  getStatusBadge, networkMeta,
+  getStatusBadge, networkMeta, walletBalance, balanceLoading,
 }: {
-  coins: SupportedCoin[];
   coinsLoading: boolean;
   coinsError: string | null;
   coinGroups: { asset: string; name: string; networks: SupportedCoin[] }[];
@@ -396,8 +403,10 @@ function CryptoDeposit({
   historyLoading: boolean;
   copyToClipboard: (text: string) => void;
   isCopied: boolean;
-  getStatusBadge: (status: string) => JSX.Element;
+  getStatusBadge: (status: string) => React.ReactElement;
   networkMeta: (network: string) => { name: string; short: string; explorer?: string };
+  walletBalance: string | null;
+  balanceLoading: boolean;
 }) {
   const selectedGroup = coinGroups.find((g) => g.asset === selectedAsset);
 
@@ -471,6 +480,36 @@ function CryptoDeposit({
 
       {/* Right: Deposit Details */}
       <div className="md:col-span-2 space-y-6">
+        {/* Wallet Balance Card */}
+        <Card className="!p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+                <Wallet size={20} className="text-blue-600" />
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Your {selectedAsset} Balance</p>
+                {balanceLoading ? (
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <Loader2 size={14} className="animate-spin text-gray-300" />
+                    <span className="text-sm text-gray-400">Loading...</span>
+                  </div>
+                ) : walletBalance !== null ? (
+                  <p className="text-lg font-bold text-gray-900">{walletBalance} <span className="text-sm font-normal text-gray-500">{selectedAsset}</span></p>
+                ) : (
+                  <p className="text-sm text-gray-400">—</p>
+                )}
+              </div>
+            </div>
+            <Link to="/wallet">
+              <Button variant="outline" size="sm">
+                <Wallet size={14} />
+                <span className="ml-1.5">View Wallet</span>
+              </Button>
+            </Link>
+          </div>
+        </Card>
+
         <Card className="flex flex-col items-center py-8">
           <div className="w-full max-w-xs space-y-6 text-center">
             {/* Coin + Network Selection */}
@@ -619,7 +658,6 @@ function CryptoDeposit({
         {/* Deposit History */}
         <Card
           title={`${selectedAsset} Deposit History`}
-          subtitle="Updates automatically every 10 seconds"
         >
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

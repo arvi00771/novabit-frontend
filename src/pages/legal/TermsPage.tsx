@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Shield, Scale, FileText } from 'lucide-react';
+import { Shield, Scale } from 'lucide-react';
 
 const LAST_UPDATED = 'July 2026';
 

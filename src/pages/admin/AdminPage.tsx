@@ -6,10 +6,9 @@ import { Modal } from '../../components/ui/Modal';
 import {
   LayoutDashboard, ShieldCheck, ArrowUpFromLine, Users,
   Wallet, Search, CheckCircle2, XCircle, Clock,
-  Loader2, AlertTriangle, RefreshCw, UserCheck, UserX,
-  Ban, Check, BarChart3, TrendingUp, DollarSign,
-  Activity, UserPlus, Lock, ChevronLeft, ChevronRight,
-  ExternalLink, Eye, Star, EyeOff, Filter
+  Loader2, AlertTriangle, RefreshCw, UserCheck, Ban,
+  Check, TrendingUp, DollarSign, Activity, Lock,
+  ChevronLeft, ChevronRight, Filter
 } from 'lucide-react';
 import api from '../../utils/api';
 import { useAuth } from '../../store/AuthContext';
@@ -63,22 +62,9 @@ interface AdminUser {
   created_at: string;
 }
 
-interface StakingProduct {
-  id: string;
-  name: string;
-  asset: string;
-  min_stake: string;
-  max_stake: string | null;
-  apy: string;
-  lock_period_days: number;
-  is_active: boolean;
-  total_staked: string;
-  staker_count: number;
-}
-
 // ── Admin Page Component ────────────────────────
 export default function AdminPage() {
-  const { user } = useAuth();
+  const { user: _user } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
 
   // Dashboard stats
