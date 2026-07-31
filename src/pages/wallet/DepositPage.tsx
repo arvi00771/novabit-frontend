@@ -50,21 +50,6 @@ interface DepositTx {
   confirmed_at: string | null;
 }
 
-// ── Fallback coins when API is unavailable ──────
-const FALLBACK_COINS: SupportedCoin[] = [
-  { asset: 'BTC', name: 'Bitcoin', network: 'NATIVE', is_active: true, min_deposit_amount: '0.0001', min_withdrawal_amount: '0.001', withdrawal_fee: '0.0005', withdrawal_fee_type: 'fixed', required_confirmations: 2, deposit_enabled: true, withdrawal_enabled: true, withdrawal_requires_2fa: true },
-  { asset: 'ETH', name: 'Ethereum', network: 'ERC20', is_active: true, min_deposit_amount: '0.01', min_withdrawal_amount: '0.05', withdrawal_fee: '0.005', withdrawal_fee_type: 'fixed', required_confirmations: 12, deposit_enabled: true, withdrawal_enabled: true, withdrawal_requires_2fa: true },
-  { asset: 'USDT', name: 'Tether', network: 'ERC20', is_active: true, min_deposit_amount: '10', min_withdrawal_amount: '20', withdrawal_fee: '5', withdrawal_fee_type: 'fixed', required_confirmations: 12, deposit_enabled: true, withdrawal_enabled: true, withdrawal_requires_2fa: true },
-  { asset: 'USDT', name: 'Tether', network: 'BEP20', is_active: true, min_deposit_amount: '5', min_withdrawal_amount: '10', withdrawal_fee: '1', withdrawal_fee_type: 'fixed', required_confirmations: 15, deposit_enabled: true, withdrawal_enabled: true, withdrawal_requires_2fa: true },
-  { asset: 'USDT', name: 'Tether', network: 'TRC20', is_active: true, min_deposit_amount: '5', min_withdrawal_amount: '10', withdrawal_fee: '1', withdrawal_fee_type: 'fixed', required_confirmations: 20, deposit_enabled: true, withdrawal_enabled: true, withdrawal_requires_2fa: true },
-  { asset: 'SOL', name: 'Solana', network: 'SOL', is_active: true, min_deposit_amount: '0.1', min_withdrawal_amount: '0.5', withdrawal_fee: '0.01', withdrawal_fee_type: 'fixed', required_confirmations: 1, deposit_enabled: true, withdrawal_enabled: true, withdrawal_requires_2fa: true },
-  { asset: 'ADA', name: 'Cardano', network: 'ADA', is_active: true, min_deposit_amount: '5', min_withdrawal_amount: '10', withdrawal_fee: '1', withdrawal_fee_type: 'fixed', required_confirmations: 3, deposit_enabled: true, withdrawal_enabled: true, withdrawal_requires_2fa: true },
-  { asset: 'DOGE', name: 'Dogecoin', network: 'NATIVE', is_active: true, min_deposit_amount: '10', min_withdrawal_amount: '50', withdrawal_fee: '1', withdrawal_fee_type: 'fixed', required_confirmations: 2, deposit_enabled: true, withdrawal_enabled: true, withdrawal_requires_2fa: true },
-  { asset: 'DOT', name: 'Polkadot', network: 'DOT', is_active: true, min_deposit_amount: '1', min_withdrawal_amount: '5', withdrawal_fee: '0.1', withdrawal_fee_type: 'fixed', required_confirmations: 1, deposit_enabled: true, withdrawal_enabled: true, withdrawal_requires_2fa: true },
-  { asset: 'LINK', name: 'Chainlink', network: 'ERC20', is_active: true, min_deposit_amount: '1', min_withdrawal_amount: '5', withdrawal_fee: '0.5', withdrawal_fee_type: 'fixed', required_confirmations: 12, deposit_enabled: true, withdrawal_enabled: true, withdrawal_requires_2fa: true },
-  { asset: 'AVAX', name: 'Avalanche', network: 'AVAX', is_active: true, min_deposit_amount: '0.1', min_withdrawal_amount: '0.5', withdrawal_fee: '0.05', withdrawal_fee_type: 'fixed', required_confirmations: 1, deposit_enabled: true, withdrawal_enabled: true, withdrawal_requires_2fa: true },
-];
-
 // ── Network info helper ─────────────────────────
 const NETWORK_META: Record<string, { name: string; short: string; explorer?: string }> = {
   ERC20: { name: 'Ethereum (ERC-20)', short: 'ERC-20' },
@@ -144,16 +129,10 @@ export default function DepositPage() {
       }
     } catch (err: any) {
       console.error('Failed to fetch coins:', err);
-      // Use fallback coins when API is unavailable
       if (err.response?.status === 401) {
         setCoinsError('Please log in to view coins.');
-        return;
-      }
-      setCoins(FALLBACK_COINS);
-      const first = FALLBACK_COINS.find((c) => c.deposit_enabled);
-      if (first) {
-        setSelectedAsset(first.asset);
-        setSelectedNetwork(first.network);
+      } else {
+        setCoinsError(err.response?.data?.message || err.message || 'Failed to load supported coins. Please try again.');
       }
     } finally {
       setCoinsLoading(false);
