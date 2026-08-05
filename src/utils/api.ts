@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://novabit-backend.onrender.com/api/v1';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://thats-changed-prev-honolulu.trycloudflare.com/api/v1';
 
 const api = axios.create({
   baseURL: API_BASE,
