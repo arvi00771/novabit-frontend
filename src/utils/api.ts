@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://thats-changed-prev-honolulu.trycloudflare.com/api/v1';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://062b1d0912863e846025d0fb0123f00c.ctonew.app/api/v1';
 
 const api = axios.create({
   baseURL: API_BASE,
