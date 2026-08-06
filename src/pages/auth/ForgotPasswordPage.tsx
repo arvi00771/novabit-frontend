@@ -18,6 +18,7 @@ const ForgotPasswordPage: React.FC = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resetToken, setResetToken] = useState<string | null>(null);
 
   const {
     register,
@@ -31,11 +32,12 @@ const ForgotPasswordPage: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      await api.post('/auth/forgot-password', data);
+      const response = await api.post('/auth/forgot-password', data);
       setIsSubmitted(true);
+      if (response.data?.resetToken) {
+        setResetToken(response.data.resetToken);
+      }
     } catch (err: any) {
-      // Backend returns success true regardless of existence for security,
-      // so errors here are likely network or validation errors.
       if (err.response?.status === 429) {
         setError('Too many requests. Please wait an hour before trying again.');
       } else if (err.response?.data?.error?.message) {
@@ -56,9 +58,26 @@ const ForgotPasswordPage: React.FC = () => {
             <div className="p-3 bg-green-100 border border-green-400 text-green-700 rounded text-sm text-center">
               If an account exists, a reset link has been sent.
             </div>
-            <p className="text-sm text-gray-600 text-center">
-              Please check your inbox for instructions on how to reset your password.
-            </p>
+            {resetToken ? (
+              <div className="space-y-3">
+                <p className="text-sm text-gray-600 text-center">
+                  Dev mode — your reset token is ready:
+                </p>
+                <div className="p-3 bg-yellow-50 border border-yellow-300 rounded text-xs font-mono break-all">
+                  {resetToken}
+                </div>
+                <Link
+                  to={`/reset-password?token=${resetToken}`}
+                  className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition-colors"
+                >
+                  Go to Reset Password
+                </Link>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-600 text-center">
+                Please check your inbox for instructions on how to reset your password.
+              </p>
+            )}
             <div className="text-center pt-2">
               <Link to="/login" className="text-blue-600 hover:underline text-sm font-medium">
                 Back to Login
