@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import api from '../../utils/api';
+import { normalizeTwoFactorSetup } from '../../utils/twoFactor';
 
 export default function SettingsPage() {
   const { user, updateUser } = useAuth();
@@ -46,11 +47,22 @@ export default function SettingsPage() {
     setTwoFA({ step: 'setup', loading: true });
     try {
       const res = await api.post('/auth/2fa/enable');
+      const setup = normalizeTwoFactorSetup(res.data?.data, user?.email);
+
+      if (!setup) {
+        setTwoFA({
+          step: 'idle',
+          loading: false,
+          error: 'The server did not return a 2FA setup code. Please try again.',
+        });
+        return;
+      }
+
       setTwoFA({
         step: 'setup',
         loading: false,
-        secret: res.data.data.secret,
-        uri: res.data.data.uri,
+        secret: setup.secret,
+        uri: setup.uri,
       });
     } catch (err: any) {
       setTwoFA({
@@ -211,27 +223,43 @@ export default function SettingsPage() {
                   </div>
                 )}
 
-                {/* SETUP: Show QR & Secret */}
-                {twoFA.step === 'setup' && twoFA.uri && (
+                {/* SETUP: Show QR & manual entry fallback */}
+                {twoFA.step === 'setup' && (twoFA.uri || twoFA.secret) && (
                   <div className="mt-4 space-y-6 border-t pt-4">
                     <div className="text-center space-y-4">
-                      <p className="text-sm text-gray-600 font-medium">
-                        Scan this QR code with your authenticator app:
-                      </p>
-                      <div className="inline-flex p-4 bg-white border-2 border-gray-200 rounded-xl">
-                        <QRCodeSVG value={twoFA.uri} size={180} level="M" />
-                      </div>
-                      <div className="space-y-2">
-                        <p className="text-xs text-gray-500">Or enter this code manually:</p>
-                        <div className="flex items-center justify-center gap-2">
-                          <code className="px-4 py-2 bg-gray-100 rounded-lg text-sm font-mono select-all">
-                            {twoFA.secret}
-                          </code>
-                          <Button variant="ghost" size="icon" onClick={copySecret}>
-                            <Copy size={14} />
-                          </Button>
+                      {twoFA.uri ? (
+                        <>
+                          <p className="text-sm text-gray-600 font-medium">
+                            Scan this QR code with your authenticator app:
+                          </p>
+                          <div className="inline-flex p-4 bg-white border-2 border-gray-200 rounded-xl" aria-label="2FA setup QR code">
+                            <QRCodeSVG value={twoFA.uri} size={180} level="M" />
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex items-center justify-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-800">
+                          <QrCode size={16} aria-hidden="true" />
+                          QR setup is unavailable. Enter the code below in your authenticator app.
                         </div>
-                      </div>
+                      )}
+
+                      {twoFA.secret ? (
+                        <div className="space-y-2">
+                          <p className="text-xs text-gray-500">Or enter this code manually:</p>
+                          <div className="flex items-center justify-center gap-2">
+                            <code className="max-w-full break-all px-4 py-2 bg-gray-100 rounded-lg text-sm font-mono select-all" aria-label="Manual 2FA setup code">
+                              {twoFA.secret}
+                            </code>
+                            <Button variant="ghost" size="icon" onClick={copySecret} aria-label="Copy manual 2FA setup code" title="Copy setup code">
+                              <Copy size={14} />
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-gray-500">
+                          Your authenticator app can scan the QR code directly.
+                        </p>
+                      )}
                     </div>
 
                     {/* Verify Code */}
@@ -243,7 +271,7 @@ export default function SettingsPage() {
                   </div>
                 )}
 
-                {twoFA.step === 'setup' && !twoFA.uri && twoFA.loading && (
+                {twoFA.step === 'setup' && !twoFA.uri && !twoFA.secret && twoFA.loading && (
                   <div className="flex items-center justify-center py-8">
                     <Loader2 size={32} className="animate-spin text-blue-600" />
                   </div>
