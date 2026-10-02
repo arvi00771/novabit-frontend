@@ -183,7 +183,16 @@ export default function TradingPage() {
 
   const handleTradeSubmit = async (data: any) => {
     try {
-      const res = await api.post('/orders', { ...data, pair });
+      // Backend CreateOrderSchema expects uppercase enums for `side` and `type`
+      // (e.g. 'BUY' | 'SELL', 'LIMIT' | 'MARKET'). The form keeps lowercase
+      // values for display/state, so normalize once here at the API boundary.
+      const payload = {
+        ...data,
+        pair,
+        side: String(data?.side ?? '').toUpperCase(),
+        type: String(data?.type ?? '').toUpperCase(),
+      };
+      const res = await api.post('/orders', payload);
       setOrderFeedback({ type: 'success', message: 'Order placed successfully!' });
       // Refresh orders and balances
       fetchOrders('open');
