@@ -4,9 +4,11 @@ interface OrderBookProps {
   bids: any[];
   asks: any[];
   pair: string;
+  /** Shown in place of the book when the order book feed failed. */
+  errorMessage?: string;
 }
 
-export const OrderBook: React.FC<OrderBookProps> = ({ bids, asks, pair }) => {
+export const OrderBook: React.FC<OrderBookProps> = ({ bids, asks, pair, errorMessage }) => {
   const quoteAsset = 'USDT';
   const baseAsset = pair.replace('USDT', '') || 'BTC';
 
@@ -23,7 +25,14 @@ export const OrderBook: React.FC<OrderBookProps> = ({ bids, asks, pair }) => {
         </div>
       </div>
       
-      <div className="flex-1 flex flex-col text-[11px] overflow-hidden">
+      {errorMessage && (
+        <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 py-10 text-center">
+          <span className="text-sm font-medium text-gray-400">{errorMessage}</span>
+          <span className="text-[11px] text-gray-300">Live depth resumes automatically when the feed recovers.</span>
+        </div>
+      )}
+
+      <div className={`flex-1 flex flex-col text-[11px] overflow-hidden ${errorMessage ? 'hidden' : ''}`}>
         {/* Header */}
         <div className="grid grid-cols-3 px-4 py-2 text-gray-400 font-bold uppercase tracking-wider border-b border-gray-50">
           <span>Price({quoteAsset})</span>

@@ -7,6 +7,7 @@ import { ChevronDown, Search, Loader2, AlertCircle, CheckCircle2, X } from 'luci
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
+import ErrorBoundary from '../../components/ErrorBoundary';
 import api from '../../utils/api';
 
 interface Order {
@@ -24,6 +25,25 @@ interface Order {
 const TIMEFRAMES = ['1m', '5m', '15m', '30m', '1h', '4h', '1D', '1W', '1M'] as const;
 type Timeframe = typeof TIMEFRAMES[number];
 
+/** Per-panel messages shown when a market feed fails; empty object = all good. */
+interface FeedErrors {
+  pairs?: string;
+  orderBook?: string;
+  trades?: string;
+  ticker?: string;
+  klines?: string;
+}
+
+/** Inline, non-blocking placeholder used when a panel has nothing to show. */
+function PanelMessage({ message, icon }: { message: string; icon?: 'alert' }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 h-full min-h-[160px] px-6 text-center">
+      {icon === 'alert' && <AlertCircle size={20} className="text-amber-500" />}
+      <span className="text-sm font-medium text-gray-400">{message}</span>
+    </div>
+  );
+}
+
 export default function TradingPage() {
   const [pair, setPair] = useState('BTCUSDT');
   const [pairs, setPairs] = useState<any[]>([]);
@@ -37,6 +57,7 @@ export default function TradingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [chartData, setChartData] = useState<any[]>([]);
   const [volumeData, setVolumeData] = useState<any[]>([]);
+  const [chartLoading, setChartLoading] = useState(true);
   const [interval, setInterval] = useState<Timeframe>('1h');
   const [activeTab, setActiveTab] = useState<'trade' | 'open' | 'history'>('trade');
   const [openOrders, setOpenOrders] = useState<Order[]>([]);
@@ -44,6 +65,7 @@ export default function TradingPage() {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [walletBalances, setWalletBalances] = useState<Record<string, string>>({});
   const [walletLoading, setWalletLoading] = useState(true);
+  const [feedErrors, setFeedErrors] = useState<FeedErrors>({});
 
   // Order feedback
   const [orderFeedback, setOrderFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -53,6 +75,7 @@ export default function TradingPage() {
   );
 
   const fetchKlines = useCallback(async (selectedPair: string, tf: Timeframe) => {
+    setChartLoading(true);
     try {
       const res = await api.get(`/market/klines/${selectedPair}`, {
         params: { interval: tf, limit: 200 }
@@ -75,10 +98,14 @@ export default function TradingPage() {
         color: k.close >= k.open ? '#26a69a33' : '#ef535033',
       }));
       setVolumeData(vol);
+      setFeedErrors(prev => ({ ...prev, klines: undefined }));
     } catch (err) {
       console.error('Failed to fetch klines:', err);
       setChartData([]);
       setVolumeData([]);
+      setFeedErrors(prev => ({ ...prev, klines: 'Chart data unavailable' }));
+    } finally {
+      setChartLoading(false);
     }
   }, []);
 
@@ -113,27 +140,52 @@ export default function TradingPage() {
     }
   }, []);
 
+  // Each market feed is loaded independently: one failing endpoint must not
+  // stop the others from populating, and must not leave the page blank.
   const fetchInitialData = useCallback(async (selectedPair: string) => {
-    try {
-      setIsLoading(true);
-      const [pairsRes, bookRes, tradesRes, tickerRes] = await Promise.all([
-        api.get('/market/pairs'),
-        api.get(`/market/orderbook/${selectedPair}`),
-        api.get(`/market/trades/${selectedPair}`),
-        api.get(`/market/ticker/${selectedPair}`)
-      ]);
+    setIsLoading(true);
 
-      setPairs(pairsRes.data.data);
-      setBids(bookRes.data.data.bids || []);
-      setAsks(bookRes.data.data.asks || []);
-      setTradeHistory(tradesRes.data.data || []);
-      setTicker(tickerRes.data.data);
-      setCurrentPrice(tickerRes.data.data.last_price || '0.00');
-    } catch (error) {
-      console.error('Failed to fetch market data:', error);
-    } finally {
-      setIsLoading(false);
+    const [pairsRes, bookRes, tradesRes, tickerRes] = await Promise.allSettled([
+      api.get('/market/pairs'),
+      api.get(`/market/orderbook/${selectedPair}`),
+      api.get(`/market/trades/${selectedPair}`),
+      api.get(`/market/ticker/${selectedPair}`)
+    ]);
+
+    const errors: FeedErrors = {};
+
+    if (pairsRes.status === 'fulfilled') {
+      setPairs(pairsRes.value.data?.data || []);
+    } else {
+      console.error('Failed to fetch trading pairs:', pairsRes.reason);
+      errors.pairs = 'Trading pairs unavailable';
     }
+
+    if (bookRes.status === 'fulfilled') {
+      setBids(bookRes.value.data?.data?.bids || []);
+      setAsks(bookRes.value.data?.data?.asks || []);
+    } else {
+      console.error('Failed to fetch order book:', bookRes.reason);
+      errors.orderBook = 'Order book unavailable';
+    }
+
+    if (tradesRes.status === 'fulfilled') {
+      setTradeHistory(tradesRes.value.data?.data || []);
+    } else {
+      console.error('Failed to fetch market trades:', tradesRes.reason);
+      errors.trades = 'Market trades unavailable';
+    }
+
+    if (tickerRes.status === 'fulfilled') {
+      setTicker(tickerRes.value.data?.data);
+      setCurrentPrice(tickerRes.value.data?.data?.last_price || '0.00');
+    } else {
+      console.error('Failed to fetch ticker:', tickerRes.reason);
+      errors.ticker = 'Market stats unavailable';
+    }
+
+    setFeedErrors(errors);
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
@@ -162,13 +214,17 @@ export default function TradingPage() {
       if (data.type === 'orderbook' && data.pair === pair) {
         setBids(data.bids);
         setAsks(data.asks);
+        // Live feed recovered — drop the REST failure notice for this panel.
+        setFeedErrors(prev => (prev.orderBook ? { ...prev, orderBook: undefined } : prev));
       }
       if (data.type === 'trade' && data.pair === pair) {
         setCurrentPrice(data.price);
         setTradeHistory(prev => [data, ...prev].slice(0, 50));
+        setFeedErrors(prev => (prev.trades ? { ...prev, trades: undefined } : prev));
       }
       if (data.type === 'ticker' && data.pair === pair) {
         setTicker(data);
+        setFeedErrors(prev => (prev.ticker ? { ...prev, ticker: undefined } : prev));
       }
     },
     reconnect: true,
@@ -229,6 +285,15 @@ export default function TradingPage() {
   const baseAsset = getBaseAsset(pair);
 
   return (
+    <ErrorBoundary
+      label="TradingPage"
+      fallback={
+        <PanelMessage
+          icon="alert"
+          message="Something went wrong loading the trading view. Reload the page to try again."
+        />
+      }
+    >
     <div className="flex flex-col h-full gap-4">
       {/* Top Bar: Pair Info */}
       <div className="bg-white rounded-lg border border-gray-200 p-4 flex flex-col sm:flex-row sm:items-center gap-4 shadow-sm">
@@ -242,6 +307,10 @@ export default function TradingPage() {
             {isConnected ? 'LIVE' : 'OFFLINE'}
           </span>
         </div>
+
+        {!ticker && feedErrors.ticker && (
+          <div className="text-sm font-medium text-gray-400">{feedErrors.ticker}</div>
+        )}
 
         {ticker && (
           <div className="flex gap-4 lg:gap-6 flex-wrap">
@@ -327,12 +396,16 @@ export default function TradingPage() {
 
             <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm flex-1 min-h-[450px]">
               {chartData.length > 0 ? (
-                <PriceChart data={chartData} volumeData={volumeData} />
-              ) : (
+                <ErrorBoundary label="PriceChart" fallback={<PanelMessage icon="alert" message="Chart failed to render. Switch timeframe or reload to retry." />}>
+                  <PriceChart data={chartData} volumeData={volumeData} />
+                </ErrorBoundary>
+              ) : chartLoading ? (
                 <div className="flex items-center justify-center h-[450px] text-gray-400 font-medium">
                   <Loader2 className="animate-spin mr-2" size={20} />
                   Loading chart data...
                 </div>
+              ) : (
+                <PanelMessage message={feedErrors.klines || 'No chart data for this pair.'} />
               )}
             </div>
 
@@ -361,7 +434,9 @@ export default function TradingPage() {
                   ))}
                   {tradeHistory.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="py-8 text-center text-gray-400">No recent trades.</td>
+                      <td colSpan={4} className="py-8 text-center text-gray-400">
+                        {feedErrors.trades || 'No recent trades.'}
+                      </td>
                     </tr>
                   )}
                 </tbody>
@@ -371,7 +446,7 @@ export default function TradingPage() {
 
           {/* Right: Order Book & Trade Form */}
           <div className="flex-1 flex flex-col gap-4 overflow-hidden min-w-[320px]">
-            <OrderBook bids={bids} asks={asks} pair={pair} />
+            <OrderBook bids={bids} asks={asks} pair={pair} errorMessage={feedErrors.orderBook} />
             <TradeForm
               pair={pair}
               balance={{
@@ -520,9 +595,15 @@ export default function TradingPage() {
                 </div>
               </div>
             ))}
+            {filteredPairs.length === 0 && (
+              <div className="p-6 text-center text-sm text-gray-400">
+                {feedErrors.pairs || 'No trading pairs available.'}
+              </div>
+            )}
           </div>
         </div>
       </Modal>
     </div>
+    </ErrorBoundary>
   );
 }
