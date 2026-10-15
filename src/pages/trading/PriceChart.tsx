@@ -1,4 +1,4 @@
-import { createChart, ColorType, type ISeriesApi } from 'lightweight-charts';
+import { createChart, ColorType, CandlestickSeries, HistogramSeries, type ISeriesApi } from 'lightweight-charts';
 import { useEffect, useRef } from 'react';
 
 interface KlineData {
@@ -50,34 +50,31 @@ export const PriceChart = (props: {
       },
     });
 
-    // Candlestick series
-    const candleSeries = (chart as any).addCandlestickSeries({
+    // Candlestick series.
+    // lightweight-charts v5 removed chart.addCandlestickSeries(); series are
+    // created through chart.addSeries(<SeriesDefinition>, options).
+    const candleSeries = chart.addSeries(CandlestickSeries, {
       upColor: '#26a69a',
       downColor: '#ef5350',
       borderVisible: false,
       wickUpColor: '#26a69a',
       wickDownColor: '#ef5350',
-    }) as ISeriesApi<"Candlestick">;
+    }) as ISeriesApi<'Candlestick'>;
 
     candleSeries.setData(data as any);
 
     // Volume histogram
     if (volumeData && volumeData.length > 0) {
-      try {
-        const volumeSeries = (chart as any).addHistogramSeries({
-          priceFormat: { type: 'volume' },
-          priceScaleId: 'volume',
-        }) as ISeriesApi<any>;
-        
-        (chart as any).priceScale('volume').applyOptions({
-          scaleMargins: { top: 0.85, bottom: 0 },
-        });
+      const volumeSeries = chart.addSeries(HistogramSeries, {
+        priceFormat: { type: 'volume' },
+        priceScaleId: 'volume',
+      });
 
-        volumeSeries.setData(volumeData);
-      } catch (e) {
-        // Volume histogram not supported in this version
-        console.log('Volume histogram not available');
-      }
+      chart.priceScale('volume').applyOptions({
+        scaleMargins: { top: 0.85, bottom: 0 },
+      });
+
+      volumeSeries.setData(volumeData as any);
     }
 
     chart.timeScale().fitContent();
